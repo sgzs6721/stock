@@ -31,22 +31,25 @@ def getPageInfo(url, num, page) :
     record = {}
     for index, tr in enumerate(trArray) :
         td = tr.findAll("td")
+        record['type']        = td[8].text.encode("utf8")[0]
+        if record['type'] != 'A' :
+            continue
         record['date']        = td[0].text.encode("utf8")
         record['num']         = td[1].a.text.encode("utf8")
         record['name']        = td[2].a.text.encode("utf8")
-        record['dealprice']   = td[3].text.encode("utf8")
-        record['volumn']      = td[4].text.encode("utf8")
-        record['volumnmoney'] = td[5].text.encode("utf8")
+        record['dealprice']   = float(td[3].text.encode("utf8"))
+        record['volume']      = float(td[4].text.encode("utf8"))
+        record['volumemoney'] = td[5].text.encode("utf8")
         record['buy']         = td[6].text.encode("utf8")
         record['sell']        = td[7].text.encode("utf8")
-        record['type']        = td[8].text.encode("utf8")
-        pprint(record)
-        each = getStockInfo(record)
-        pprint(each)
 
-def getStockInfo(record) :
-    pprint(ts.get_realtime_quotes(record['num']))
-    return 0
+        detail = ts.get_hist_data(record['num'], start=record['date'], end=record['date'])
+        record['closeprice']  = float(detail[u"close"][0])
+        record['islimited']   = 0 if float(detail[u"p_change"][0]) < 9.9 else 1
+        record['discount']    = '%.2f' % ((record['dealprice'] - record['closeprice']) / record['closeprice'] * 100)
+        record['dealrate']    = '%.2f' % (record['volume'] * 100 / float(detail[u"volume"][0]))
+        record['sameplace']   = 1 if record['buy'] == record['sell'] else 0
+        pprint(record)
 
 def insertDB(info, table) :
     pass
