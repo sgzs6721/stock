@@ -48,7 +48,7 @@ def getPageInfo(url, num, page) :
 
         detail = ts.get_hist_data(record['num'], start=date)
         df = detail.iloc[::-1]
-        print df
+        # print df
         record['closeprice']  = float(df[u"close"][0])
         record['islimited']   = 0 if float(df[u"p_change"][0]) < 9.9 else 1
         record['discount']    = '%.2f' % ((record['dealprice'] - record['closeprice']) / record['closeprice'] * 100)
@@ -66,7 +66,7 @@ def getPageInfo(url, num, page) :
             else :
                 record['increase-' + str(i)] = ''
 
-        pprint(record)
+        record['ontop'] = whetherOnTop(date)
         exit()
 
 def getPreDetail(df, day) :
@@ -91,11 +91,18 @@ def getIncrease(base, info) :
 
     return ','.join([closeIncrease, highIncrease, lowIncrease])
 
+def whetherOnTop(date) :
+    url = topURL + date
+    soup = getSoup(url)
+    trArray = soup.findAll(id='dataTable')
+
+
 def insertDB(info, table) :
     pass
 
 
 bigURL = "http://vip.stock.finance.sina.com.cn/q/go.php/vInvestConsult/kind/dzjy/index.phtml"
+topURL = "http://vip.stock.finance.sina.com.cn/q/go.php/vInvestConsult/kind/lhb/index.phtml?tradedate="
 page = 20
 while page < 21 :
     bigTradeInfo = getPageInfo(bigURL, 60, page)
