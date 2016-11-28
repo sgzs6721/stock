@@ -38,8 +38,8 @@ def getPageInfo(url, num, page) :
         record['date']         = td[0].text.encode("utf8")
         record['num']           = td[1].a.text.encode("utf8")
         record['name']          = td[2].a.text.encode("utf8")
-        record['dealprice']     = float(td[3].text.encode("utf8"))
-        record['volume']        = float(td[4].text.encode("utf8"))
+        record['dealprice']     = td[3].text.encode("utf8")
+        record['volume']        = td[4].text.encode("utf8")
         record['volumemoney']   = td[5].text.encode("utf8")
         record['buy']           = td[6].text.encode("utf8")
         record['sell']          = td[7].text.encode("utf8")
@@ -49,16 +49,18 @@ def getPageInfo(url, num, page) :
         detail = ts.get_hist_data(record['num'], start=date)
         df = detail.iloc[::-1]
         # print df
-        record['closeprice']  = float(df[u"close"][0])
-        record['islimited']   = 0 if float(df[u"p_change"][0]) < 9.9 else 1
-        record['discount']    = '%.2f' % ((record['dealprice'] - record['closeprice']) / record['closeprice'] * 100)
-        record['dealrate']    = '%.2f' % (record['volume'] * 100 / float(df[u"volume"][0]))
-        record['sameplace']   = 1 if record['buy'] == record['sell'] else 0
+        record['closeprice']  = str(df[u"close"][0])
+        record['islimited']   = '0' if float(df[u"p_change"][0]) < 9.85 else '1'
+        record['discount']    = '%.2f' % ((float(record['dealprice']) - float(record['closeprice'])) / float(record['closeprice']) * 100)
+        record['dealrate']    = '%.2f' % (float(record['volume']) * 100 / float(df[u"volume"][0]))
+        record['sameplace']   = '1' if record['buy'] == record['sell'] else '0'
 
+        print type(record['closeprice'])
         startCaculate = 0
         for i in [1, 2, 5, 10, 15, 20] :
 
             info = getPreDetail(df, i)
+            pprint(info)
 
             if info :
                 if i == 1 : startCaculate = info['open']
@@ -66,8 +68,9 @@ def getPageInfo(url, num, page) :
             else :
                 record['increase-' + str(i)] = ''
 
-        record['ontop'] = whetherOnTop(date)
-        exit()
+        [record['ontop'], record['toptype']] = whetherOnTop(date, record['num'])
+
+        return record
 
 def getPreDetail(df, day) :
     price = {}
@@ -91,20 +94,53 @@ def getIncrease(base, info) :
 
     return ','.join([closeIncrease, highIncrease, lowIncrease])
 
-def whetherOnTop(date) :
+def whetherOnTop(date, num) :
     url = topURL + date
     soup = getSoup(url)
-    trArray = soup.findAll(id='dataTable')
+    tables = soup.findAll(id='dataTable')
+
+    for index, table in enumerate(tables) :
+        trs = table.findAll('tr',attrs = {'class':'head'})
+
+        for tr in trs[2:] :
+            td = tr.findAll('td')[1].text.encode("utf8")
+            if td == num :
+                topType = trs[0].td.span.text.encode("utf8")
+                return ['1', topType]
+    return ['0', '']
 
 
 def insertDB(info, table) :
-    pass
+    cur = conn.cursor()
+    statement = "insert into " + table + "(date,num,name,dealprice,closeprice,islimited,discount," + \
+        "volume,volumemoney,dealrate,buy,sell,sameplace,increaseone,increasetwo,increasefive,increaseten," + \
+        "increasefifteen,increasetwenty,ontop,toptype) VALUES('" + info['date'] + "','" + info['num'] + "','" + \
+        info['name'] + "','" + info['dealprice'] + "','" + info['closeprice'] + "','" + \
+        info['islimited'] + "','" + info['discount'] + "','" + info['volume'] + "','" + \
+        info['volumemoney'] + "','" + info['dealrate'] + "','" + info['buy'] + "','" + \
+        info['sell'] + "','" + info['sameplace'] + "','" + info['increase-1'] + "','" + info['increase-2'] + "','" + \
+        info['increase-5'] + "','" + info['increase-10'] + "','" + info['increase-15'] + "','" + \
+        info['increase-20'] + "','" + info['ontop'] + "','" + info['toptype'] + "')"
+    print statement
+    cur.execute(statement)
+    cur.close()
+    conn.commit()
 
 
 bigURL = "http://vip.stock.finance.sina.com.cn/q/go.php/vInvestConsult/kind/dzjy/index.phtml"
 topURL = "http://vip.stock.finance.sina.com.cn/q/go.php/vInvestConsult/kind/lhb/index.phtml?tradedate="
 page = 20
+
+host = "localhost"
+user = "root"
+passwd = "1qazxsw2"
+port = 3306
+database = "stock"
+
+conn = MySQLdb.connect(host=host,user=user,passwd=passwd,db=database,port=port,charset='utf8')
+
 while page < 21 :
     bigTradeInfo = getPageInfo(bigURL, 60, page)
+    pprint(bigTradeInfo)
     insertDB(bigTradeInfo, "bigtrade")
     page = page + 1
