@@ -15,7 +15,7 @@ def getSoup (url) :
             req = urllib2.Request(url)
             res = urllib2.urlopen(req, timeout = 15).read()
             # return BeautifulSoup(res, "html.parser")
-            return BeautifulSoup(res)
+            return BeautifulSoup(res,fromEncoding="gb18030")
 
         except :
             print "Could not get soup from " + url
@@ -29,13 +29,15 @@ def getPageInfo(url, num, page) :
     realURL = url + "?num=" + str(num) + "&p=" + str(page)
     soup = getSoup(realURL)
     trArray = soup.find(id='dataTable').findAll("tr")[1:]
-    record = {}
-    for index, tr in enumerate(trArray) :
+    if len(trArray) == 0 :
+        exit()
+    for tr in trArray :
+        record = {}
         td = tr.findAll("td")
         record['type']        = td[8].text.encode("utf8")[0]
         if record['type'] != 'A' :
             continue
-        record['date']         = td[0].text.encode("utf8")
+        record['date']          = td[0].text.encode("utf8")
         record['num']           = td[1].a.text.encode("utf8")
         record['name']          = td[2].a.text.encode("utf8")
         record['dealprice']     = td[3].text.encode("utf8")
@@ -55,12 +57,10 @@ def getPageInfo(url, num, page) :
         record['dealrate']    = '%.2f' % (float(record['volume']) * 100 / float(df[u"volume"][0]))
         record['sameplace']   = '1' if record['buy'] == record['sell'] else '0'
 
-        print type(record['closeprice'])
         startCaculate = 0
         for i in [1, 2, 5, 10, 15, 20] :
 
             info = getPreDetail(df, i)
-            pprint(info)
 
             if info :
                 if i == 1 : startCaculate = info['open']
@@ -70,7 +70,8 @@ def getPageInfo(url, num, page) :
 
         [record['ontop'], record['toptype']] = whetherOnTop(date, record['num'])
 
-        return record
+        insertDB(record, "bigtrade")
+        # pprint('record')
 
 def getPreDetail(df, day) :
     price = {}
@@ -111,6 +112,7 @@ def whetherOnTop(date, num) :
 
 
 def insertDB(info, table) :
+    print info['date'] + ":" + info['name']
     cur = conn.cursor()
     statement = "insert into " + table + "(date,num,name,dealprice,closeprice,islimited,discount," + \
         "volume,volumemoney,dealrate,buy,sell,sameplace,increaseone,increasetwo,increasefive,increaseten," + \
@@ -121,15 +123,25 @@ def insertDB(info, table) :
         info['sell'] + "','" + info['sameplace'] + "','" + info['increase-1'] + "','" + info['increase-2'] + "','" + \
         info['increase-5'] + "','" + info['increase-10'] + "','" + info['increase-15'] + "','" + \
         info['increase-20'] + "','" + info['ontop'] + "','" + info['toptype'] + "')"
-    print statement
-    cur.execute(statement)
-    cur.close()
-    conn.commit()
-
-
-bigURL = "http://vip.stock.finance.sina.com.cn/q/go.php/vInvestConsult/kind/dzjy/index.phtml"
-topURL = "http://vip.stock.finance.sina.com.cn/q/go.php/vInvestConsult/kind/lhb/index.phtml?tradedate="
-page = 20
+    try :
+        cur.execute(statement)
+        cur.close()
+        conn.commit()
+    except MySQLdb.Error, e:
+        print "\tMysql Error %d: %s" % (e.args[0], e.args[1])
+        print "Update last record..."
+        volume = float(info['volume']) * 2
+        volumemoney = float(info['volumemoney']) * 2
+        dealrate = float(info['dealrate']) * 2
+        statement = "update " + table + " set volume='" + str(volume) + \
+                    "',volumemoney='" + str(volumemoney) + "',dealrate='" + \
+                    str(dealrate) + "' where dealprice='" + info['dealprice'] + "' and num='" + info['num'] + "' and volume='" + \
+                    info['volume'] + "' and buy='" + info['buy'] + "' and sell='" + info['sell'] + "'"
+        print statement
+        cur.execute(statement)
+        cur.close()
+        conn.commit()
+        pass
 
 host = "localhost"
 user = "root"
@@ -139,8 +151,11 @@ database = "stock"
 
 conn = MySQLdb.connect(host=host,user=user,passwd=passwd,db=database,port=port,charset='utf8')
 
-while page < 21 :
-    bigTradeInfo = getPageInfo(bigURL, 60, page)
-    pprint(bigTradeInfo)
-    insertDB(bigTradeInfo, "bigtrade")
+bigURL = "http://vip.stock.finance.sina.com.cn/q/go.php/vInvestConsult/kind/dzjy/index.phtml"
+topURL = "http://vip.stock.finance.sina.com.cn/q/go.php/vInvestConsult/kind/lhb/index.phtml?tradedate="
+page = 6
+
+while page < 7 :
+    print "page:" + str(page)
+    getPageInfo(bigURL, 20, page)
     page = page + 1
