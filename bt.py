@@ -30,7 +30,7 @@ def getPageInfo(url, num, page) :
     soup = getSoup(realURL)
     trArray = soup.find(id='dataTable').findAll("tr")[1:]
     if len(trArray) == 0 :
-        exit()
+        exit("Last Page")
     for tr in trArray :
         record = {}
         td = tr.findAll("td")
@@ -153,9 +153,9 @@ conn = MySQLdb.connect(host=host,user=user,passwd=passwd,db=database,port=port,c
 
 bigURL = "http://vip.stock.finance.sina.com.cn/q/go.php/vInvestConsult/kind/dzjy/index.phtml"
 topURL = "http://vip.stock.finance.sina.com.cn/q/go.php/vInvestConsult/kind/lhb/index.phtml?tradedate="
-page = 6
+page = 1
 
-while page < 7 :
+while page > 0 :
     print "page:" + str(page)
     getPageInfo(bigURL, 20, page)
     page = page + 1
