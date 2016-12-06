@@ -38,7 +38,6 @@ def getPageInfo(url, page) :
         td = tr.findAll("td")
         record['person']        = td[0].text.encode("utf8")
         record['prediction']    = td[3].text.encode("utf8")
-        print record['prediction']
         record['num']           = numArray[index * 2 + 1].text.encode("utf8")[13:19]
         record['predict_time']  = td[5].text.encode("utf8")
         record['price']         = td[6].text.encode("utf8")
@@ -56,7 +55,7 @@ def getPageInfo(url, page) :
             date = str(datetime.datetime.strptime(date, "%Y-%m-%d").date() + datetime.timedelta(days=1))
 
         detail = ts.get_hist_data(record['num'], start=date)
-        print detail
+        # print detail
 
         if detail.empty :
             continue
@@ -66,7 +65,7 @@ def getPageInfo(url, page) :
         for i in range(0,21) :
 
             info = getPreDetail(df, i)
-            pprint(info)
+            # pprint(info)
 
             if info :
                 if i == 0 : startCaculate = info['open']
@@ -74,9 +73,9 @@ def getPageInfo(url, page) :
             else :
                 record['increase-' + str(i)] = ''
 
-        pprint(record)
+        # pprint(record)
         insertDB(record, "ten")
-        exit()
+        # exit()
 
 def getPreDetail(df, day) :
     price = {}
@@ -101,7 +100,7 @@ def getIncrease(base, info) :
     return ','.join([closeIncrease, highIncrease, lowIncrease])
 
 def insertDB(info, table) :
-    print info['predict_time'] + ":" + info['prediction']
+    print info['person'] + ":" + info['predict_time'] + ":" + info['prediction']
     cur = conn.cursor()
     statement = "insert into " + table + "(person,prediction,num,predict_time,success_date,price,success,increaseone,increasetwo,increasefive,increaseten," + \
         "increasefifteen,increasetwenty) VALUES('" + info['person'] + "','" + info['prediction'] + "','" + \
@@ -109,7 +108,7 @@ def insertDB(info, table) :
         info['price'] + "','" + info['success'] + "','" + info['increase-1'] + "','" + info['increase-2'] + "','" + \
         info['increase-5'] + "','" + info['increase-10'] + "','" + info['increase-15'] + "','" + \
         info['increase-20'] + "')"
-    print statement
+    # print statement
     try :
         cur.execute(statement)
         cur.close()
@@ -128,7 +127,7 @@ conn = MySQLdb.connect(host=host,user=user,passwd=passwd,db=database,port=port,c
 tenURL = "http://www.178448.com/fjzt-1.html"
 page = 43084
 
-while page < 43085 :
+while page > 0 :
     print "page:" + str(page)
     getPageInfo(tenURL, page)
-    page = page + 1
+    page = page - 1
