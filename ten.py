@@ -4,8 +4,8 @@ import time
 import re
 import datetime
 from pprint import pprint
-# from bs4 import BeautifulSoup
-from BeautifulSoup import BeautifulSoup
+from bs4 import BeautifulSoup
+# from BeautifulSoup import BeautifulSoup
 import tushare as ts
 import MySQLdb
 
@@ -15,8 +15,8 @@ def getSoup (url) :
         try :
             req = urllib2.Request(url)
             res = urllib2.urlopen(req, timeout = 15).read()
-            # return BeautifulSoup(res, "html.parser")
-            return BeautifulSoup(res,fromEncoding="gb18030")
+            return BeautifulSoup(res, "html.parser")
+            # return BeautifulSoup(res,fromEncoding="gb18030")
 
         except :
             print "Could not get soup from " + url
@@ -27,11 +27,13 @@ def getSoup (url) :
     return ""
 
 def getPageInfo(url, page) :
-    realURL = url + "?page=" + str(page)
+    realURL = url + "&page=" + str(page)
+
     soup = getSoup(realURL)
     tbody = soup.find(attrs={'class':'datalist'}).table.tbody
     trArray = tbody.findAll("tr")
     numArray = tbody.findAll("script")
+
     # print trArray
     for index, tr in enumerate(trArray) :
         record = {}
@@ -124,8 +126,8 @@ database = "stock"
 
 conn = MySQLdb.connect(host=host,user=user,passwd=passwd,db=database,port=port,charset='utf8')
 
-tenURL = "http://www.178448.com/fjzt-1.html"
-page = 43084
+tenURL = "http://www.178448.com/fjzt-1.html?view=archiver"
+page = 53689
 
 while page > 0 :
     print "page:" + str(page)

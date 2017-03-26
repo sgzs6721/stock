@@ -3,8 +3,8 @@ import urllib2
 import time
 import datetime
 from pprint import pprint
-# from bs4 import BeautifulSoup
-from BeautifulSoup import BeautifulSoup
+from bs4 import BeautifulSoup
+# from BeautifulSoup import BeautifulSoup
 import tushare as ts
 import MySQLdb
 
@@ -14,8 +14,8 @@ def getSoup (url) :
         try :
             req = urllib2.Request(url)
             res = urllib2.urlopen(req, timeout = 15).read()
-            # return BeautifulSoup(res, "html.parser")
-            return BeautifulSoup(res,fromEncoding="gb18030")
+            return BeautifulSoup(res, "html.parser")
+            # return BeautifulSoup(res,fromEncoding="gb18030")
 
         except :
             print "Could not get soup from " + url
@@ -38,18 +38,23 @@ def getPageInfo(url, num, page) :
         if record['type'] != 'A' :
             continue
         record['date']          = td[0].text.encode("utf8")
-        record['num']           = td[1].a.text.encode("utf8")
+        record['num']           = td[1].a.text.encode("utf8").strip()
         record['name']          = td[2].a.text.encode("utf8")
         record['dealprice']     = td[3].text.encode("utf8")
         record['volume']        = td[4].text.encode("utf8")
         record['volumemoney']   = td[5].text.encode("utf8")
-        record['buy']           = td[6].text.encode("utf8")
-        record['sell']          = td[7].text.encode("utf8")
+        record['buy']           = td[6].text.encode("utf8").strip()
+        record['sell']          = td[7].text.encode("utf8").strip()
 
         date = record['date']
 
+
         detail = ts.get_hist_data(record['num'], start=date)
-        df = detail.iloc[::-1]
+        # print detail
+        try :
+            df = detail.iloc[::-1]
+        except:
+            continue
         # print df
         record['closeprice']  = str(df[u"close"][0])
         record['islimited']   = '0' if float(df[u"p_change"][0]) < 9.85 else '1'
@@ -112,7 +117,7 @@ def whetherOnTop(date, num) :
 
 
 def insertDB(info, table) :
-    print info['date'] + ":" + info['name']
+    print info['date'] + ":" + info['name'] + ":" + info['num'] + "***"
     cur = conn.cursor()
     statement = "insert into " + table + "(date,num,name,dealprice,closeprice,islimited,discount," + \
         "volume,volumemoney,dealrate,buy,sell,sameplace,increaseone,increasetwo,increasefive,increaseten," + \
@@ -129,14 +134,11 @@ def insertDB(info, table) :
         conn.commit()
     except MySQLdb.Error, e:
         print "\tMysql Error %d: %s" % (e.args[0], e.args[1])
-        print "Update last record..."
-        volume = float(info['volume']) * 2
-        volumemoney = float(info['volumemoney']) * 2
-        dealrate = float(info['dealrate']) * 2
-        statement = "update " + table + " set volume='" + str(volume) + \
-                    "',volumemoney='" + str(volumemoney) + "',dealrate='" + \
-                    str(dealrate) + "' where dealprice='" + info['dealprice'] + "' and num='" + info['num'] + "' and volume='" + \
-                    info['volume'] + "' and buy='" + info['buy'] + "' and sell='" + info['sell'] + "'"
+        # print "Update last record..."
+        statement = "update " + table + " set volume=volume + '" + info['volume'] + \
+                    "',volumemoney=volumemoney + '" + info['volumemoney'] + "',dealrate=dealrate +'" + \
+                    info['dealrate'] + "' where date='"+ info['date'] +"' and dealprice='" + info['dealprice'] + "' and num='"\
+                    + info['num'] + "' and buy='" + info['buy'] + "' and sell='" + info['sell'] + "'"
         print statement
         cur.execute(statement)
         cur.close()
@@ -153,9 +155,9 @@ conn = MySQLdb.connect(host=host,user=user,passwd=passwd,db=database,port=port,c
 
 bigURL = "http://vip.stock.finance.sina.com.cn/q/go.php/vInvestConsult/kind/dzjy/index.phtml"
 topURL = "http://vip.stock.finance.sina.com.cn/q/go.php/vInvestConsult/kind/lhb/index.phtml?tradedate="
-page = 1
+page = 1156
 
 while page > 0 :
     print "page:" + str(page)
-    getPageInfo(bigURL, 20, page)
-    page = page + 1
+    getPageInfo(bigURL, 60, page)
+    page = page - 1
