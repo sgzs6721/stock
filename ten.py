@@ -4,8 +4,8 @@ import time
 import re
 import datetime
 from pprint import pprint
-from bs4 import BeautifulSoup
-# from BeautifulSoup import BeautifulSoup
+# from bs4 import BeautifulSoup
+from BeautifulSoup import BeautifulSoup
 # import tushare as ts
 import MySQLdb
 
@@ -15,8 +15,8 @@ def getSoup (url) :
         try :
             req = urllib2.Request(url)
             res = urllib2.urlopen(req, timeout = 15).read()
-            return BeautifulSoup(res, "html.parser")
-            # return BeautifulSoup(res,fromEncoding="gb18030")
+            # return BeautifulSoup(res, "html.parser")
+            return BeautifulSoup(res,fromEncoding="gb18030")
 
         except :
             print "Could not get soup from " + url
@@ -65,29 +65,29 @@ def insertDB(info, table) :
 
     statisticTable = "statistics"
 
-    insert = "insert into `"+statisticTable+"` (person,num,success) VALUES('" + info['person'] + "','1','"
+    insert = "insert into `" + statisticTable + "` (person,num,success) VALUES('" + info['person'] + "','1','"
 
     personExist = checkExistPerson(info['person'], statisticTable)
 
     success = "0"
-    if info['success'] > 0:
-        success = "1"
+    if not info['success'] == '0':
+        success = '1'
 
     if personExist :
-        insert = "update `statistics` set num = num + 1,success = success + " + success + " where id = '" + str(personExist) + "'"
+        insert = "update `" + statisticTable + "` set num = num + 1,success = success + " + success + " where id = '" + str(personExist) + "'"
     else :
         insert = insert + success + "')"
 
-    #TODO
-
-    exit()
+    # exit()
     try :
         cur.execute(insertStatement)
+        cur.execute(insert)
         cur.close()
         conn.commit()
 
     except MySQLdb.Error, e:
         print "\tMysql Error %d: %s" % (e.args[0], e.args[1])
+        conn.rollback()
 
 
 def checkExistPerson(person, table) :
@@ -106,7 +106,7 @@ def checkExistPerson(person, table) :
 
     result = 0
     if len(personInfo) :
-        pprint(personInfo)
+        # pprint(personInfo)
         result = personInfo[0][0]
 
     return result
@@ -123,8 +123,8 @@ conn = MySQLdb.connect(host=host,user=user,passwd=passwd,db=database,port=port,c
 tenURL = "http://www.178448.com/fjzt-1.html?view=archiver"
 page = 1
 
-while page <= 53689 :
+while page <= 53689 :  #done 8200
     print "page:" + str(page)
     getPageInfo(tenURL, page)
     page = page + 1
-    exit()
+    # exit()
