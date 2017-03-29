@@ -4,8 +4,8 @@ import time
 import re
 import datetime
 from pprint import pprint
-# from bs4 import BeautifulSoup
-from BeautifulSoup import BeautifulSoup
+from bs4 import BeautifulSoup
+# from BeautifulSoup import BeautifulSoup
 # import tushare as ts
 import MySQLdb
 
@@ -15,8 +15,8 @@ def getSoup (url) :
         try :
             req = urllib2.Request(url)
             res = urllib2.urlopen(req, timeout = 15).read()
-            # return BeautifulSoup(res, "html.parser")
-            return BeautifulSoup(res,fromEncoding="gb18030")
+            return BeautifulSoup(res, "html.parser")
+            # return BeautifulSoup(res,fromEncoding="gb18030")
 
         except :
             print "Could not get soup from " + url
@@ -53,24 +53,64 @@ def getPageInfo(url, page) :
 
         # pprint(record)
         insertDB(record, "ten")
-        # exit()
 
 def insertDB(info, table) :
     print info['person'] + ":" + info['pdate'] + " " + info['ptime'] + ":" + info['name']
 
     cur = conn.cursor()
 
-    statement = "insert into " + table + "(person,name,code,price,pdate,ptime,success,sdate) VALUES('" + info['person'] + "','" + \
+    insertStatement = "insert into " + table + "(person,name,code,price,pdate,ptime,success,sdate) VALUES('" + info['person'] + "','" + \
         info['name'] + "','" + info['code'] + "','" + info['price'] + "','" + info['pdate'] + "','" + info['ptime'] + "','" + info['success'] + "','" + \
         info['sdate'] + "')"
 
+    statisticTable = "statistics"
+
+    insert = "insert into `"+statisticTable+"` (person,num,success) VALUES('" + info['person'] + "','1','"
+
+    personExist = checkExistPerson(info['person'], statisticTable)
+
+    success = "0"
+    if info['success'] > 0:
+        success = "1"
+
+    if personExist :
+        insert = "update `statistics` set num = num + 1,success = success + " + success + " where id = '" + str(personExist) + "'"
+    else :
+        insert = insert + success + "')"
+
+    #TODO
+
+    exit()
     try :
-        cur.execute(statement)
+        cur.execute(insertStatement)
         cur.close()
         conn.commit()
 
     except MySQLdb.Error, e:
         print "\tMysql Error %d: %s" % (e.args[0], e.args[1])
+
+
+def checkExistPerson(person, table) :
+    checkStatement = "select * from `" + table + "` where person = '" + person + "'"
+    cur = conn.cursor()
+
+    try:
+        cur.execute(checkStatement)
+        personInfo = cur.fetchall()
+        cur.close()
+        conn.commit()
+
+    except MySQLdb.Error, e:
+        print "\tCould not check whether the user is existed!"
+        exit(1)
+
+    result = 0
+    if len(personInfo) :
+        pprint(personInfo)
+        result = personInfo[0][0]
+
+    return result
+
 
 host = "localhost"
 user = "root"
@@ -87,3 +127,4 @@ while page <= 53689 :
     print "page:" + str(page)
     getPageInfo(tenURL, page)
     page = page + 1
+    exit()

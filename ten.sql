@@ -34,7 +34,7 @@ CREATE TABLE `ten` (
   `pdate` date NOT NULL,
   `ptime` time NOT NULL,
   `price` double DEFAULT NULL,
-  `sdate` varchar(16) DEFAULT NULL COMMENT AS `成功日期`,
+  `sdate` varchar(16) DEFAULT NULL,
   `success` int(4) NOT NULL DEFAULT '0'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
