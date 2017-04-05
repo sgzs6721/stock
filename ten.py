@@ -4,8 +4,8 @@ import time
 import re
 import datetime
 from pprint import pprint
-# from bs4 import BeautifulSoup
-from BeautifulSoup import BeautifulSoup
+from bs4 import BeautifulSoup
+# from BeautifulSoup import BeautifulSoup
 # import tushare as ts
 import MySQLdb
 
@@ -15,8 +15,8 @@ def getSoup (url) :
         try :
             req = urllib2.Request(url)
             res = urllib2.urlopen(req, timeout = 15).read()
-            # return BeautifulSoup(res, "html.parser")
-            return BeautifulSoup(res,fromEncoding="gb18030")
+            return BeautifulSoup(res, "html.parser")
+            # return BeautifulSoup(res,fromEncoding="gb18030")
 
         except :
             print "Could not get soup from " + url
@@ -27,19 +27,21 @@ def getSoup (url) :
     return ""
 
 def getPageInfo(url, page) :
-    realURL = url + "&page=" + str(page)
+    realURL = url + "page=" + str(page)
 
     soup = getSoup(realURL)
     tbody = soup.find(attrs={'class':'datalist'}).table.tbody
     trArray = tbody.findAll("tr")
-    numArray = tbody.findAll("script")
+    #numArray = tbody.findAll("script")
+
+    trArray.reverse()
 
     for index, tr in enumerate(trArray) :
         record = {}
         td = tr.findAll("td")
         record['person']        = td[0].text.encode("utf8")
         record['name']          = td[3].text.encode("utf8")
-        record['code']          = numArray[index * 2 + 1].text.encode("utf8")[13:19]
+        #record['code']          = numArray[index * 2 + 1].text.encode("utf8")[13:19]
         record['price']         = td[6].text.encode("utf8")
         record['success']       = td[9].text.encode("utf8")
 
@@ -59,13 +61,13 @@ def insertDB(info, table) :
 
     cur = conn.cursor()
 
-    insertStatement = "insert into " + table + "(person,name,code,price,pdate,ptime,success,sdate) VALUES('" + info['person'] + "','" + \
-        info['name'] + "','" + info['code'] + "','" + info['price'] + "','" + info['pdate'] + "','" + info['ptime'] + "','" + info['success'] + "','" + \
+    insertStatement = "insert into " + table + "(person,name,price,pdate,ptime,success,sdate) VALUES(\"" + info['person'] + "\",'" + \
+        info['name'] + "','" + info['price'] + "','" + info['pdate'] + "','" + info['ptime'] + "','" + info['success'] + "','" + \
         info['sdate'] + "')"
 
     statisticTable = "statistics"
 
-    insert = "insert into `" + statisticTable + "` (person,num,success) VALUES('" + info['person'] + "','1','"
+    insert = "insert into `" + statisticTable + "` (person,num,success) VALUES(\"" + info['person'] + "\",'1','"
 
     personExist = checkExistPerson(info['person'], statisticTable)
 
@@ -78,10 +80,11 @@ def insertDB(info, table) :
     else :
         insert = insert + success + "')"
 
-    # exit()
+    # return
     try :
         cur.execute(insertStatement)
         cur.execute(insert)
+        # print "update statistics"
         cur.close()
         conn.commit()
 
@@ -91,7 +94,7 @@ def insertDB(info, table) :
 
 
 def checkExistPerson(person, table) :
-    checkStatement = "select * from `" + table + "` where person = '" + person + "'"
+    checkStatement = "select * from `" + table + "` where person = \"" + person + "\""
     cur = conn.cursor()
 
     try:
@@ -120,11 +123,12 @@ database = "stock"
 
 conn = MySQLdb.connect(host=host,user=user,passwd=passwd,db=database,port=port,charset='utf8')
 
-tenURL = "http://www.178448.com/fjzt-1.html?view=archiver"
-page = 1
+# tenURL = "http://www.178448.com/fjzt-1.html?view=archiver&"
+tenURL = "http://www.178448.com/fjzt-1.html?"
+page = 54503
 
-while page <= 53689 :  #done 8200
+while page >= 1 :
     print "page:" + str(page)
     getPageInfo(tenURL, page)
-    page = page + 1
-    # exit()
+    page = page - 1
+    #exit()
