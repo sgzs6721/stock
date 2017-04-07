@@ -50,6 +50,8 @@ def getPageInfo(url, page) :
 
         dateAndTime = re.split('\s+', td[5].text.encode("utf8"))
         record['pdate'] = dateAndTime[0]
+        if record['pdate'] == "2017-03-29" :
+            exit()
         record['ptime'] = dateAndTime[1]
         record['sdate'] = td[10].text.encode("utf8")
 
@@ -125,7 +127,7 @@ conn = MySQLdb.connect(host=host,user=user,passwd=passwd,db=database,port=port,c
 
 # tenURL = "http://www.178448.com/fjzt-1.html?view=archiver&"
 tenURL = "http://www.178448.com/fjzt-1.html?"
-page = 54503
+page = 30000
 
 while page >= 1 :
     print "page:" + str(page)
