@@ -50,16 +50,37 @@ def getPageInfo(url, page) :
 
         dateAndTime = re.split('\s+', td[5].text.encode("utf8"))
         record['pdate'] = dateAndTime[0]
-        if record['pdate'] == "2017-03-29" :
-            exit()
+
         record['ptime'] = dateAndTime[1]
         record['sdate'] = td[10].text.encode("utf8")
 
         # pprint(record)
-        insertDB(record, "ten")
+        if not checkExistRecord(record, "ten") :
+            print record['person'] + ":" + record['pdate'] + " " + record['ptime'] + ":" + record['name'] + " not existed,insert into db"
+            insertDB(record, "ten")
+        else :
+            print "existed"
+
+
+def checkExistRecord(record, table) :
+    cur = conn.cursor()
+    queryStatement = "select * from `" + table + "` where person = '" + record['person'] + "' AND name = '" + record['name'] + \
+                     "' AND pdate = '" + record['pdate'] + "'"
+
+    try :
+        cur.execute(queryStatement)
+        info = cur.fetchall()
+        # pprint(info)
+        if len(info) :
+            return True
+    except :
+        print "select error!"
+        exit(1)
+
+    return False
 
 def insertDB(info, table) :
-    print info['person'] + ":" + info['pdate'] + " " + info['ptime'] + ":" + info['name']
+    # print info['person'] + ":" + info['pdate'] + " " + info['ptime'] + ":" + info['name']
 
     cur = conn.cursor()
 
@@ -127,10 +148,12 @@ conn = MySQLdb.connect(host=host,user=user,passwd=passwd,db=database,port=port,c
 
 # tenURL = "http://www.178448.com/fjzt-1.html?view=archiver&"
 tenURL = "http://www.178448.com/fjzt-1.html?"
-page = 30000
+page = 1
 
 while page >= 1 :
-    print "page:" + str(page)
+    # print "page:" + str(page)
     getPageInfo(tenURL, page)
-    page = page - 1
+    # page = page - 1
+    print "sleep 60s"
+    time.sleep(60)
     #exit()
