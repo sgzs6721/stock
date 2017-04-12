@@ -106,8 +106,8 @@ def insertDB(info, table) :
     # return
     try :
         cur.execute(insertStatement)
-        cur.execute(insert)
-        # print "update statistics"
+        result = cur.execute(insert)
+        print "update statistics:" + str(result) + " success:" + success
         cur.close()
         conn.commit()
 
