@@ -52,11 +52,8 @@ def getPageInfo(url, page) :
         record['ptime'] = dateAndTime[1]
         record['sdate'] = td[10].text.encode("utf8")
 
-        print currentDate
-        print record['sdate']
-
-        # if not record['sdate'] == currentDate :
-        #     exit()
+        if not record['sdate'] == currentDate :
+            exit()
         updateDB(record, "ten")
 
 def updateDB(info, table) :
@@ -66,18 +63,19 @@ def updateDB(info, table) :
 
     statisticTable = "statistics"
 
-    update = "update `" + table + "` set success = success + 1,udate = '" + currentDate  + " where person = '" + info['person'] + \
-             "' AND name = '" + info['name'] + "' AND pdate = '" + info['pdate'] + "' AND udate !='" + currentDate + "'"
-    update2 = "update `" + statisticTable + "` set success = success + 1 where person ='" + info['person'] + "'"
+    update = "update `" + table + "` set success = '" + info['success'] + "', sdate = '" + info['sdate'] + \
+             "' where person = '" + info['person'] + "' AND name = '" + info['name'] + "' AND pdate = '" + \
+             info['pdate'] + "' AND sdate !='" + info['sdate'] + "'"
+    update2 = "update `" + statisticTable + "` set success = success + 1, udate = '" + info['sdate'] + \
+              "' where person ='" + info['person'] + "' AND (udate != '" + info['sdate'] + "' OR udate is NULL)"
 
-    print update
-    print update2
-
-    exit()
+    # exit()
     try :
-        cur.execute(update)
-        if info['success'] == 1 :
-            cur.execute(update2)
+        print update
+        print cur.execute(update)
+        if info['success'] == '1' :
+            print update2
+            print cur.execute(update2)
         cur.close()
         conn.commit()
 
@@ -102,3 +100,4 @@ while page >= 1 :
     print "page:" + str(page)
     getPageInfo(tenURL, page)
     page = page + 1
+    # exit()
