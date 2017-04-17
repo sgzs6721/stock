@@ -55,11 +55,14 @@ def getPageInfo(url, page) :
         record['sdate'] = td[10].text.encode("utf8")
 
         # pprint(record)
+        insertNum = 0
         if not checkExistRecord(record, "ten") :
             print record['person'] + ":" + record['pdate'] + " " + record['ptime'] + ":" + record['name'] + " not existed,insert into db"
-            insertDB(record, "ten")
+            insertNum = insertDB(record, "ten")
         else :
             print "existed"
+
+    return insertNum
 
 
 def checkExistRecord(record, table) :
@@ -104,8 +107,9 @@ def insertDB(info, table) :
         insert = insert + success + "')"
 
     # return
+    insertNum = 0
     try :
-        cur.execute(insertStatement)
+        insertNum = cur.execute(insertStatement)
         result = cur.execute(insert)
         print "update statistics:" + str(result) + " success:" + success
         cur.close()
@@ -115,6 +119,7 @@ def insertDB(info, table) :
         print "\tMysql Error %d: %s" % (e.args[0], e.args[1])
         conn.rollback()
 
+    return insertNum
 
 def checkExistPerson(person, table) :
     checkStatement = "select * from `" + table + "` where person = \"" + person + "\""
@@ -152,7 +157,12 @@ page = 1
 
 while page >= 1 :
     # print "page:" + str(page)
-    getPageInfo(tenURL, page)
+    insertNum = getPageInfo(tenURL, page)
+    if insertNum >15 :
+        page = page + 1
+    else :
+        if page > 1 :
+            page = page - 1
     # page = page - 1
     print "sleep 60s"
     time.sleep(60)
