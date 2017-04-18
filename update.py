@@ -96,8 +96,11 @@ currentDate = time.strftime('%Y-%m-%d', time.localtime(time.time()))
 tenURL = "http://www.178448.com/fjzt-2.html?"
 page = 1
 
+print currentDate
+print "*****************************************************"
 while page >= 1 :
     print "page:" + str(page)
     getPageInfo(tenURL, page)
     page = page + 1
     # exit()
+print

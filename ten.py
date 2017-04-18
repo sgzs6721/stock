@@ -158,12 +158,16 @@ page = 1
 while page >= 1 :
     # print "page:" + str(page)
     insertNum = getPageInfo(tenURL, page)
-    if insertNum >15 :
-        page = page + 1
+    if True :
+        if insertNum >15 :
+            page = page + 1
+            continue
+        else :
+            if page > 1 :
+                page = page - 1
+                continue
+        print "sleep 100s"
+        time.sleep(100)
     else :
-        if page > 1 :
-            page = page - 1
-    # page = page - 1
-    print "sleep 60s"
-    time.sleep(60)
+        page = page - 1
     #exit()
