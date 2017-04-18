@@ -35,6 +35,7 @@ def getPageInfo(url, page) :
     #numArray = tbody.findAll("script")
 
     trArray.reverse()
+    insertNum = 0
 
     for index, tr in enumerate(trArray) :
         record = {}
@@ -55,10 +56,10 @@ def getPageInfo(url, page) :
         record['sdate'] = td[10].text.encode("utf8")
 
         # pprint(record)
-        insertNum = 0
+
         if not checkExistRecord(record, "ten") :
             print record['person'] + ":" + record['pdate'] + " " + record['ptime'] + ":" + record['name'] + " not existed,insert into db"
-            insertNum = insertDB(record, "ten")
+            insertNum = insertNum + insertDB(record, "ten")
         else :
             print "existed"
 
@@ -156,8 +157,9 @@ tenURL = "http://www.178448.com/fjzt-1.html?"
 page = 1
 
 while page >= 1 :
-    # print "page:" + str(page)
+    print "page:" + str(page)
     insertNum = getPageInfo(tenURL, page)
+    print "num:" + str(insertNum)
     if True :
         if insertNum >15 :
             page = page + 1
