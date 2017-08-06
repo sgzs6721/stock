@@ -4,8 +4,8 @@ import time
 import re
 import datetime
 from pprint import pprint
-from bs4 import BeautifulSoup
-# from BeautifulSoup import BeautifulSoup
+# from bs4 import BeautifulSoup
+from BeautifulSoup import BeautifulSoup
 
 import MySQLdb
 
@@ -15,8 +15,8 @@ def getSoup (url) :
         try :
             req = urllib2.Request(url)
             res = urllib2.urlopen(req, timeout = 15).read()
-            return BeautifulSoup(res, "html.parser")
-            # return BeautifulSoup(res,fromEncoding="gb18030")
+            # return BeautifulSoup(res, "html.parser")
+            return BeautifulSoup(res,fromEncoding="gb18030")
 
         except :
             print "Could not get soup from " + url
@@ -69,7 +69,6 @@ def updateDB(info, table) :
     update2 = "update `" + statisticTable + "` set success = success + 1, udate = '" + info['sdate'] + \
               "' where person ='" + info['person'] + "' AND (udate != '" + info['sdate'] + "' OR udate is NULL)"
 
-    # exit()
     try :
         print update
         print cur.execute(update)
