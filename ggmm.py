@@ -4,8 +4,6 @@ import re
 import datetime
 import time
 import math
-import sys
-
 from pprint import pprint
 from bs4 import BeautifulSoup
 # from BeautifulSoup import BeautifulSoup
@@ -34,10 +32,7 @@ def getPageInfo(url, page) :
     soup = getSoup(realURL)
     tbody = soup.table.tbody
     trArray = tbody.findAll("tr")
-
     trArray.reverse()
-    # pprint(trArray)
-    # exit()
 
     for index, tr in enumerate(trArray) :
         record = {}
@@ -72,7 +67,8 @@ def getPageInfo(url, page) :
             record['discount'] = '0'
 
         # pprint(record)
-        insertDB(record, "ggmm")
+        if not checkExistRecord(record, "ggmm") :
+            insertDB(record, "ggmm")
 
 def insertDB(info, table) :
 
@@ -91,6 +87,23 @@ def insertDB(info, table) :
         print "\tMysql Error %d: %s" % (e.args[0], e.args[1])
 
 
+def checkExistRecord(record, table) :
+    cur = conn.cursor()
+    queryStatement = "select * from `" + table + "` where person = '" + record['person'] + "' AND name = '" + record['name'] + \
+                     "' AND date = '" + record['date'] + "' AND price = '" + record['price'] + "'"
+
+    try :
+        cur.execute(queryStatement)
+        info = cur.fetchall()
+        # pprint(info)
+        if len(info) :
+            return True
+    except :
+        print "select error!"
+        exit(1)
+
+    return False
+
 host = "localhost"
 user = "root"
 passwd = "1qazxsw2"
@@ -100,7 +113,7 @@ database = "stock"
 conn = MySQLdb.connect(host=host,user=user,passwd=passwd,db=database,port=port,charset='utf8')
 
 ggmmURL = "http://data.10jqka.com.cn/financial/ggjy/field/enddate/order/desc/page/"
-page = 11
+page = 1
 
 while page > 0 :
     print "page:" + str(page)
