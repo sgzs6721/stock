@@ -32,7 +32,7 @@ def getPageInfo(url, page) :
     soup = getSoup(realURL)
     tbody = soup.table.tbody
     trArray = tbody.findAll("tr")
-    trArray.reverse()
+    # trArray.reverse()
 
     for index, tr in enumerate(trArray) :
         record = {}
@@ -67,8 +67,8 @@ def getPageInfo(url, page) :
             record['discount'] = '0'
 
         # pprint(record)
-        if not checkExistRecord(record, "ggmm") :
-            insertDB(record, "ggmm")
+        # if not checkExistRecord(record, "ggmm") :
+        insertDB(record, "ggmm")
 
 def insertDB(info, table) :
 
@@ -85,6 +85,7 @@ def insertDB(info, table) :
 
     except MySQLdb.Error, e:
         print "\tMysql Error %d: %s" % (e.args[0], e.args[1])
+        exit(0)
 
 
 def checkExistRecord(record, table) :
@@ -117,5 +118,6 @@ page = 1
 
 while page > 0 :
     print "page:" + str(page)
-    getPageInfo(ggmmURL, page)
-    page = page - 1
+    insertNum = getPageInfo(ggmmURL, page)
+    if insertNum == 50 :
+        page = page + 1
