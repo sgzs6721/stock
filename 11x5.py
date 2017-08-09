@@ -31,6 +31,7 @@ def getPageInfo(url, page) :
     soup = getSoup(url)
     tbody = soup.findAll("table")[9].findAll("tbody")[1]
     trArray = tbody.findAll("tr")
+    trArray.reverse()
 
     for index, tr in enumerate(trArray) :
         record = {}
@@ -60,7 +61,7 @@ def insertDB(info, table) :
 
     except MySQLdb.Error, e:
         print "\tMysql Error %d: %s" % (e.args[0], e.args[1])
-        # exit(1)
+        exit(0)
 
 def getDate(dateNoStr) :
     dateNo = datetime.datetime.strptime(dateNoStr, "%Y%m%d")
