@@ -60,7 +60,7 @@ def insertDB(info, table) :
 
     except MySQLdb.Error, e:
         print "\tMysql Error %d: %s" % (e.args[0], e.args[1])
-        exit(1)
+        # exit(1)
 
 def getDate(dateNoStr) :
     dateNo = datetime.datetime.strptime(dateNoStr, "%Y%m%d")
@@ -76,11 +76,11 @@ database = "stock"
 conn = MySQLdb.connect(host=host,user=user,passwd=passwd,db=database,port=port,charset='utf8')
 
 ggmmURL = "http://zst.cjcp.com.cn/cjw11x5_qs/view/11x5_jiben-5-bj11x5-11-1-"
-pageDate = "20141105"
-
-while pageDate != "20170809" :
-    print "pageDate:" + str(pageDate)
-    page = pageDate + "01-" + pageDate + "99-9.html"
-    getPageInfo(ggmmURL+page, page)
-    pageDate = getDate(pageDate)
+# pageDate = "20141105"
+pageDate = datetime.date.today().strftime("%Y%m%d")
+# while pageDate != "20170809" :
+print "pageDate:" + str(pageDate)
+page = pageDate + "01-" + pageDate + "99-9.html"
+getPageInfo(ggmmURL+page, page)
+pageDate = getDate(pageDate)
     # exit()
