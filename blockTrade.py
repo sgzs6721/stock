@@ -32,8 +32,8 @@ def getPageInfo(url, page) :
     soup = getSoup(realURL)
     tbody = soup.table.tbody
     trArray = tbody.findAll("tr")
-    trArray.reverse()
-
+    # trArray.reverse()
+    insertNum = 0
     for index, tr in enumerate(trArray) :
         record = {}
         td = tr.findAll("td")
@@ -47,10 +47,15 @@ def getPageInfo(url, page) :
         record['buy']          = td[8].text.encode("utf8")
         record['sell']         = td[9].text.encode("utf8")
 
+        if record['date'] == datetime.date.today().strftime("%Y-%m-%d") :
+
         # pprint(record)
         # if not checkExistRecord(record, "blocktrade") :
-        insertDB(record, "blocktrade")
-        # exit()
+            insertNum = insertNum + insertDB(record, "blocktrade")
+        else :
+            break
+
+    return insertNum
 
 def insertDB(info, table) :
 
@@ -61,13 +66,14 @@ def insertDB(info, table) :
         info['discount'] + "','" + info['buy'] + "','" + info['sell'] + "')"
 
     try :
-        cur.execute(insertStatement)
+        insertNum = cur.execute(insertStatement)
         cur.close()
         conn.commit()
 
     except MySQLdb.Error, e:
         print "\tMysql Error %d: %s" % (e.args[0], e.args[1])
 
+    return insertNum
 
 def checkExistRecord(record, table) :
     cur = conn.cursor()
@@ -99,5 +105,7 @@ page = 1
 
 while page > 0 :
     print "page:" + str(page)
-    getPageInfo(ggmmURL, page)
+    insertNumber = getPageInfo(ggmmURL, page)
+    if insertNumber == 50 :
+        page = page + 1
     page = page - 1
