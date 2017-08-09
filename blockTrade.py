@@ -53,7 +53,7 @@ def getPageInfo(url, page) :
         # if not checkExistRecord(record, "blocktrade") :
             insertNum = insertNum + insertDB(record, "blocktrade")
         else :
-            break
+            exit(0)
 
     return insertNum
 
@@ -108,4 +108,3 @@ while page > 0 :
     insertNumber = getPageInfo(ggmmURL, page)
     if insertNumber == 50 :
         page = page + 1
-    page = page - 1
