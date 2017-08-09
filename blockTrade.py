@@ -95,7 +95,7 @@ database = "stock"
 conn = MySQLdb.connect(host=host,user=user,passwd=passwd,db=database,port=port,charset='utf8')
 
 ggmmURL = "http://data.10jqka.com.cn/market/dzjy/field/enddate/order/desc/page/"
-page = 371
+page = 1
 
 while page > 0 :
     print "page:" + str(page)
